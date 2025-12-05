@@ -1,45 +1,56 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { ActivityIndicator, View } from "react-native";
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import LoginScreen from "./screens/LoginScreen";
+import ChatScreen from "./screens/ChatScreen";
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+// ---- DEFINISI ROUTE ----
+export type RootStackParamList = {
+  Login: undefined;
+  Chat: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+function RootNavigator() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName={user ? "Chat" : "Login"}>
+        {!user ? (
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ title: "Autentikasi", headerShown: false }}
+          />
+        ) : (
+          <Stack.Screen
+            name="Chat"
+            component={ChatScreen}
+            options={{ title: "Chat Room" }}
+          />
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
+export default function App() {
   return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
-
-export default App;
